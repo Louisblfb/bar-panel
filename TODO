@@ -1,0 +1,5 @@
+
+1. use root window name for info and stdin for pager
+2. write translators for monsterwm and ewmh
+3. add windowed pager mode and info/dock mode
+
