@@ -2,20 +2,8 @@
  * MIT/X Consortium License
  * Copyright (c) 2014 Louis Belford
  *
- * gcc -Wall -o bar bar<version>.h bar<version>.c -lX11
+ * gcc -Wall -o bar bar.h bar.c -lX11
  *
- * Bar is a simple xlib status bar. It
- * takes input from stdin and writes it
- * to the right hand side of the window.
- * It is designed to be used with monster-filter,
- * a utility for parsing info about monsterwm.
- * The flag <d 0-3 0-4 > in stdin denotes information
- * about the desktop, the first value being the currently
- * focused desktop and the second value being the
- * mode of monsterwm. The flag <w string> denotes
- * the currently focused window, string being the name
- * of the foused window. Desktop info and window info is
- * all written to the right hand side of the window.
  */
 
 #include "bar.h"
@@ -215,7 +203,12 @@ int main(int argc, char *argv[]) {
                    "    -wrkbg              background colour for the pager\n"
                    "    -wrkfg              foreground colour for the pager\n"
                    "    -focbg              background colour for the focused window\n"
-                   "    -emptybg            background colour for unused space\n");
+                   "    -emptybg            background colour for unused space\n"
+                   "    -fontcol            colour of text\n"
+                   "    -wrk[1-4]           names of the workspaces/virtual desktops\n"
+                   "    -font\n"
+                   "    -h or --help\n");
+            exit(1);
         }
     }
    
