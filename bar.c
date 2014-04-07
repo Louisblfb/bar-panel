@@ -196,18 +196,18 @@ int main(int argc, char *argv[]) {
             WRK4 = argv[i+1];
         if (strcmp(argv[i], "-font") == 0) 
             FONT = argv[i+1];
-        if (strcmp(argv[i], "-h") == 0) {
+        if ((strcmp(argv[i], "-h") == 0) || (strcmp(argv[i], "--help") == 0) {
             printf("Usage: bar [OPTION]...\n"
                    "A simple status bar and pager.\n\n"
-                   "    -infobg             background colour for text on the right hand side\n"
-                   "    -wrkbg              background colour for the pager\n"
-                   "    -wrkfg              foreground colour for the pager\n"
-                   "    -focbg              background colour for the focused window\n"
-                   "    -emptybg            background colour for unused space\n"
-                   "    -fontcol            colour of text\n"
-                   "    -wrk[1-4]           names of the workspaces/virtual desktops\n"
-                   "    -font\n"
-                   "    -h or --help\n");
+                   "  -infobg             background colour for text on the right hand side\n"
+                   "  -wrkbg              background colour for the pager\n"
+                   "  -wrkfg              foreground colour for the pager\n"
+                   "  -focbg              background colour for the focused window\n"
+                   "  -emptybg            background colour for unused space\n"
+                   "  -fontcol            colour of text\n"
+                   "  -wrk[1-4]           names of the workspaces/virtual desktops\n"
+                   "  -font\n"
+                   "  -h or --help\n");
             exit(1);
         }
     }
