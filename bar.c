@@ -48,7 +48,7 @@ X_init() {
 	dis = XOpenDisplay(NULL);
 	screen = DefaultScreen(dis); 		//queries information about display
 	root = RootWindow(dis, screen);
-	screenwidth = DisplayWidth(dis, screen);
+    screenwidth = DisplayWidth(dis, screen);
 	screenheight = DisplayHeight(dis, screen);
 
    	XColor c; 								//deals with colors

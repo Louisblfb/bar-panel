@@ -17,8 +17,8 @@
 
 static int 
     HEIGHT    =   14,
-    LOC       =   0;    // LOC defines the location of the bar (0-top, 1-bottom)
-
+    LOC       =   1;    // LOC defines the location of the bar (0-top, 1-bottom)
+   
 static char
     *WRK1     =    " 1 ",
     *WRK2     =    " 2 ",
