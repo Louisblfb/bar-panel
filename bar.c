@@ -123,12 +123,15 @@ void X_cleanup() {
 void 
 render_colors(int modelen, int infolen, int wrknum) {
 
-    int wrkx;
+    int wrkx, infox, wrf, wrloc; 
     if (modelen == 0)
         wrkx = XTextWidth(txtfonti, WRK4, strlen(WRK4)) + txtlen4 + 3;
     else
         wrkx = XTextWidth(txtfonti, WRK4, strlen(WRK4)) + txtlen4 + 9 + modelen;
-    int infox = screenwidth - infolen - 3, wrf, wrloc;    
+    if (infolen == 0)
+        infox = 0;
+    else 
+        infox = screenwidth - infolen - 3;   
 
     XSetForeground(dis, gc, emptybg);                           // "clear" the window
     XFillRectangle(dis, pm, gc, 0, 0, screenwidth, HEIGHT);
@@ -196,6 +199,10 @@ int main(int argc, char *argv[]) {
             WRK4 = argv[i+1];
         if (strcmp(argv[i], "-font") == 0) 
             FONT = argv[i+1];
+        if (strcmp(argv[i], "-mbeg") == 0)
+            SEPBEG = argv[i+1];
+        if (strcmp(argv[i], "-mend") == 0)
+            SEPEND = argv[i+1];
         if ((strcmp(argv[i], "-h") == 0) || (strcmp(argv[i], "--help") == 0)) {
             printf("Usage: bar [OPTION]...\n"
                    "A simple status bar and pager.\n\n"
@@ -250,29 +257,25 @@ int main(int argc, char *argv[]) {
 
             switch(wsm) {
                 case 0 :
-                    strcpy(mode, "[s-tile]");
+                    sprintf(mode, "%ss-tile%s", SEPBEG, SEPEND);
                     break;
                 case 1 :
-                    strcpy(mode, "[grid]");
+                    sprintf(mode, "%sgrid%s", SEPBEG, SEPEND);
                     break;
                 case 2 :
-                    strcpy(mode, "[b-tile]");
+                    sprintf(mode, "%sb-tile%s", SEPBEG, SEPEND);
                     break;
                 case 3 :
-                    strcpy(mode, "[monocle]");
+                    sprintf(mode, "%smonocle%s", SEPBEG, SEPEND);
                     break;
                 case 4 :
-                    strcpy(mode, "[float]");
+                    sprintf(mode, "%sfloat%s", SEPBEG, SEPEND);
                     break;
                 default :
                     strcpy(mode, "");
             }
 
-            int buff_len;
-            if (strlen(buffer) < 1)
-                buff_len = 0;
-            else 
-                 buff_len = XTextWidth(txtfonti, buffer, strlen(buffer));
+            int buff_len = XTextWidth(txtfonti, buffer, strlen(buffer));
             render_colors(XTextWidth(txtfonti, mode, strlen(mode)), buff_len, wsnum);
             XDrawString(dis, pm, gc, screenwidth - buff_len , HEIGHT - HEIGHT/3, buffer, strlen(buffer));
             XDrawString(dis, pm, gc, txtlen4 + XTextWidth(txtfonti, WRK4, strlen(WRK4)) + 6, HEIGHT-HEIGHT/3, mode, strlen(mode));
