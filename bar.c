@@ -18,7 +18,7 @@
  * all written to the right hand side of the window.
  */
 
-#include "bar-1.0.h"
+#include "bar.h"
 
 
 static void X_init();
