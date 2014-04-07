@@ -196,7 +196,7 @@ int main(int argc, char *argv[]) {
             WRK4 = argv[i+1];
         if (strcmp(argv[i], "-font") == 0) 
             FONT = argv[i+1];
-        if ((strcmp(argv[i], "-h") == 0) || (strcmp(argv[i], "--help") == 0) {
+        if ((strcmp(argv[i], "-h") == 0) || (strcmp(argv[i], "--help") == 0)) {
             printf("Usage: bar [OPTION]...\n"
                    "A simple status bar and pager.\n\n"
                    "  -infobg             background colour for text on the right hand side\n"
