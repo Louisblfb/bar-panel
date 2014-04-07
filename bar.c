@@ -268,7 +268,11 @@ int main(int argc, char *argv[]) {
                     strcpy(mode, "");
             }
 
-            int buff_len = XTextWidth(txtfonti, buffer, strlen(buffer));
+            int buff_len;
+            if (strlen(buffer) < 1)
+                buff_len = 0;
+            else 
+                 buff_len = XTextWidth(txtfonti, buffer, strlen(buffer));
             render_colors(XTextWidth(txtfonti, mode, strlen(mode)), buff_len, wsnum);
             XDrawString(dis, pm, gc, screenwidth - buff_len , HEIGHT - HEIGHT/3, buffer, strlen(buffer));
             XDrawString(dis, pm, gc, txtlen4 + XTextWidth(txtfonti, WRK4, strlen(WRK4)) + 6, HEIGHT-HEIGHT/3, mode, strlen(mode));
