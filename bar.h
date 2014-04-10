@@ -2,22 +2,21 @@
  * MIT/X Consortium License
  * Copyright (c) 2014 Louis Belford
  *
- * gcc -Wall -o bar bar<version>.h bar<version>.c -lX11
+ * gcc -Wall -o bar bar.h bar.c -lX11
  *
- * This file is used to set the default colors,
- * desktop names, font and size.
  */
 
 #include <X11/Xlib.h>
 #include <X11/Xutil.h>
 #include <X11/Xos.h>
+#include <X11/Xatom.h>
 
 #include <stdlib.h>
 #include <stdio.h>
 
 static int 
     HEIGHT    =   14,
-    LOC       =   1;    // LOC defines the location of the bar (0-top, 1-bottom)
+    LOC       =   0;    // LOC defines the location of the bar (0-top, 1-bottom)
    
 static char
     *WRK1     =    " 1 ",

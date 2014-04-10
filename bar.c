@@ -11,7 +11,9 @@
 
 static void X_init();
 static void X_cleanup();
-static void render_colors(int, int, int);
+static void render_left_colors(int, int);
+static void render_right_colors(int);
+static void update_output_left();
 static void draw_wrk();
  
 static Display *dis;
@@ -24,6 +26,8 @@ static XFontStruct *txtfonti;
 static int
     root,
     screen,
+    info_prev = 0,
+    prev_wrk = 0,
     screenwidth,
     screenheight,
     txtlen1,
@@ -46,12 +50,12 @@ X_init() {
     int i, y;
 
 	dis = XOpenDisplay(NULL);
-	screen = DefaultScreen(dis); 		//queries information about display
+	screen = DefaultScreen(dis); 		
 	root = RootWindow(dis, screen);
     screenwidth = DisplayWidth(dis, screen);
 	screenheight = DisplayHeight(dis, screen);
 
-   	XColor c; 								//deals with colors
+   	XColor c; 							
 	long *colvs[] = { &infobg, &wrkbg, &wrkfg, &focbg, &emptybg, &fontcol, NULL};
 	const char *colst[] = { INFOBG, WRKBG, WRKFG, FOCBG, EMPTYBG, FONTCOL, NULL};
 	cm = DefaultColormap(dis, screen);
@@ -60,19 +64,20 @@ X_init() {
 		*colvs[i] = c.pixel;
 	}
 
-	txtfont = XLoadFont(dis, FONT); 		//deals with fonts
+	txtfont = XLoadFont(dis, FONT); 	
     txtfonti = XQueryFont(dis, txtfont);
 
-    if (LOC == 1) 							//location of bar
+    if (LOC == 1) 							
         y = screenheight - HEIGHT;
     else
         y = 0;
 
-	XSetWindowAttributes winat = { 			//deals with window
+	XSetWindowAttributes winat = { 			
         .override_redirect = 1,
         .colormap = cm,
         .background_pixel = emptybg,
         .event_mask = ExposureMask,
+        .event_mask = PropertyChangeMask,
     };
 
     win = XCreateWindow(dis, root, 0, y, screenwidth, HEIGHT, 1,
@@ -82,7 +87,7 @@ X_init() {
         CWOverrideRedirect |
         CWColormap |
         CWBackPixel |
-        CWEventMask,
+        CWEventMask, 
         &winat
     );
 
@@ -109,7 +114,7 @@ X_init() {
 	XMapWindow(dis, win);
     XSync(dis, False);
 
-}
+};
 
 void X_cleanup() {
 	XUnloadFont(dis, txtfont);              
@@ -118,23 +123,19 @@ void X_cleanup() {
     XFreeGC(dis, gc);
     XDestroyWindow(dis, win);
     exit(1);
-}
+};
 
 void 
-render_colors(int modelen, int infolen, int wrknum) {
+render_left_colors(int modelen, int wrknum) {
 
-    int wrkx, infox, wrf, wrloc; 
+    int wrkx, wrf, wrloc; 
     if (modelen == 0)
         wrkx = XTextWidth(txtfonti, WRK4, strlen(WRK4)) + txtlen4 + 3;
     else
-        wrkx = XTextWidth(txtfonti, WRK4, strlen(WRK4)) + txtlen4 + 9 + modelen;
-    if (infolen == 0)
-        infox = 0;
-    else 
-        infox = screenwidth - infolen - 3;   
+        wrkx = XTextWidth(txtfonti, WRK4, strlen(WRK4)) + txtlen4 + 9 + modelen;   
 
     XSetForeground(dis, gc, emptybg);                           // "clear" the window
-    XFillRectangle(dis, pm, gc, 0, 0, screenwidth, HEIGHT);
+    XFillRectangle(dis, pm, gc, 0, 0, prev_wrk, HEIGHT);
     
     XSetForeground(dis, gc, wrkbg);                             // draw workspace background
     XFillRectangle(dis, pm, gc, 0, 0, wrkx, HEIGHT);
@@ -160,9 +161,8 @@ render_colors(int modelen, int infolen, int wrknum) {
     }
     XFillRectangle(dis, pm, gc, wrloc, 0, wrf, HEIGHT);
  
-    XSetForeground(dis, gc, infobg);                            // draw info background
-    XFillRectangle(dis, pm, gc, infox, 0, infox, HEIGHT);
     XSetForeground(dis, gc, fontcol);
+    prev_wrk = wrkx;
 };
 
 void draw_wrk() {
@@ -172,8 +172,75 @@ void draw_wrk() {
     XDrawString(dis, pm, gc, txtlen4, HEIGHT-HEIGHT/3, WRK4, strlen(WRK4));
 }
 
+void 
+render_right_colors(int buff_len) {
 
-int main(int argc, char *argv[]) {
+    int info_x;
+    if (buff_len == 0) 
+        info_x = 0;
+    else 
+        info_x = screenwidth - buff_len - 3;
+
+    XSetForeground(dis, gc, emptybg);
+    XFillRectangle(dis, pm, gc, info_prev, 0, info_prev, HEIGHT);
+    
+    XSetForeground(dis, gc, infobg);
+    XFillRectangle(dis, pm, gc, info_x, 0, info_x, HEIGHT);
+    XSetForeground(dis, gc, fontcol);
+
+    info_prev = info_x;
+
+}
+
+void 
+update_output_left() {
+
+    char buffer[512], mode[32];
+    int wsnum, wsm, endval, i;
+
+    fgets(buffer, 512, stdin);
+    for (i=0; i<512; i++) {
+        if (buffer[i] == 'd' && buffer[i-1] == '<') {
+            endval = i;
+            wsnum = buffer[i+1] - '0';
+            wsm = buffer[i+2] - '0';
+        }
+    }
+
+    for (endval=endval-1; endval<512-endval; endval++) {
+        buffer[endval] = '\0';
+    }
+
+    switch(wsm) {
+        case 0 :
+            sprintf(mode, "%ss-tile%s", SEPBEG, SEPEND);
+            break;
+        case 1 :
+            sprintf(mode, "%sgrid%s", SEPBEG, SEPEND);
+            break;
+        case 2 :
+            sprintf(mode, "%sb-tile%s", SEPBEG, SEPEND);
+            break;
+        case 3 :
+            sprintf(mode, "%smonocle%s", SEPBEG, SEPEND);
+            break;
+        case 4 :
+            sprintf(mode, "%sfloat%s", SEPBEG, SEPEND);
+            break;
+        default :
+            strcpy(mode, "");
+    }
+
+    render_left_colors(XTextWidth(txtfonti, mode, strlen(mode)), wsnum);
+    XDrawString(dis, pm, gc, txtlen4 + XTextWidth(txtfonti, WRK4, strlen(WRK4)) + 6, HEIGHT-HEIGHT/3, mode, strlen(mode));
+    draw_wrk();
+
+    memset(buffer, 0, 512);
+    memset(mode, 0, 32); 
+};
+
+int 
+main(int argc, char *argv[]) {
 
     int i;
     for (i=1; i<argc-1; i++) {
@@ -203,7 +270,7 @@ int main(int argc, char *argv[]) {
             SEPBEG = argv[i+1];
         if (strcmp(argv[i], "-mend") == 0)
             SEPEND = argv[i+1];
-        if ((strcmp(argv[i], "-h") == 0) || (strcmp(argv[i], "--help") == 0)) {
+        if (strcmp(argv[i], "-h") == 0) {
             printf("Usage: bar [OPTION]...\n"
                    "A simple status bar and pager.\n\n"
                    "  -infobg             background colour for text on the right hand side\n"
@@ -220,71 +287,55 @@ int main(int argc, char *argv[]) {
     }
    
 	X_init();
+    XSetForeground(dis, gc, emptybg);
+    XFillRectangle(dis, pm, gc, 0, 0, screenwidth, HEIGHT);
+    XSetForeground(dis, gc, fontcol);
+
     txtlen1 = 3;
     txtlen2 = txtlen1 + XTextWidth(txtfonti, WRK1, strlen(WRK1)) + 6;
     txtlen3 = txtlen2 + XTextWidth(txtfonti, WRK2, strlen(WRK2)) + 6;
     txtlen4 = txtlen3 + XTextWidth(txtfonti, WRK3, strlen(WRK3)) + 6;
 
-    char buffer[512], mode[32];
-    int select_ret, wsnum, wsm, endval;
+    XEvent ev;
+    XSelectInput(dis, root, PropertyChangeMask);
+
+    char *buffer2;
+    int conec_num = ConnectionNumber(dis);
     fd_set fds;
     struct timeval timeout;
-    timeout.tv_sec = 5;
-    timeout.tv_usec = 0;   
+    timeout.tv_sec = 1;
+    timeout.tv_usec = 2000000;   
 
     while(1) {
-
         FD_ZERO(&fds);
+        FD_SET(conec_num, &fds);
         FD_SET(STDIN_FILENO, &fds);
-        select_ret = select(1, &fds, NULL, NULL, &timeout);
-        
-        if (select_ret == -1)
-            printf("error in select");
-
-        else {
-            fgets(buffer, 512, stdin);
-            for (i=0; i<512; i++) {
-                if (buffer[i] == 'd' && buffer[i-1] == '<') {
-                    endval = i;
-                    wsnum = buffer[i+1] - '0';
-                    wsm = buffer[i+2] - '0';
-                }
-            }
-
-            for (endval=endval-1; endval<512-endval; endval++) {
-                buffer[endval] = '\0';
-            }
-
-            switch(wsm) {
-                case 0 :
-                    sprintf(mode, "%ss-tile%s", SEPBEG, SEPEND);
-                    break;
-                case 1 :
-                    sprintf(mode, "%sgrid%s", SEPBEG, SEPEND);
-                    break;
-                case 2 :
-                    sprintf(mode, "%sb-tile%s", SEPBEG, SEPEND);
-                    break;
-                case 3 :
-                    sprintf(mode, "%smonocle%s", SEPBEG, SEPEND);
-                    break;
-                case 4 :
-                    sprintf(mode, "%sfloat%s", SEPBEG, SEPEND);
-                    break;
-                default :
-                    strcpy(mode, "");
-            }
-
-            int buff_len = XTextWidth(txtfonti, buffer, strlen(buffer));
-            render_colors(XTextWidth(txtfonti, mode, strlen(mode)), buff_len, wsnum);
-            XDrawString(dis, pm, gc, screenwidth - buff_len , HEIGHT - HEIGHT/3, buffer, strlen(buffer));
-            XDrawString(dis, pm, gc, txtlen4 + XTextWidth(txtfonti, WRK4, strlen(WRK4)) + 6, HEIGHT-HEIGHT/3, mode, strlen(mode));
-            draw_wrk();
-
-            memset(buffer, 0, 512);
-            memset(mode, 0, 32);
+        select(conec_num+1, &fds, NULL, NULL, NULL);
+       
+        if (FD_ISSET(STDIN_FILENO, &fds)) {
+            update_output_left();            
             XCopyArea(dis, pm, win, gc, 0, 0, screenwidth, HEIGHT, 0, 0);
             XSync(dis, False); 
+        }
+
+        if (FD_ISSET(conec_num, &fds)) {
+
+            while (XPending(dis) !=0) {
+                XNextEvent(dis, &ev);
+                switch(ev.type) {
+                    case PropertyNotify :
+                        if (ev.xproperty.window == root && ev.xproperty.atom == XA_WM_NAME) {
+                            XFetchName(dis, root, &buffer2);
+                            int buff_len = XTextWidth(txtfonti, buffer2, strlen(buffer2));
+                            render_right_colors(buff_len);
+                            XDrawString(dis, pm, gc, screenwidth - buff_len , HEIGHT - HEIGHT/3, buffer2, strlen(buffer2));
+                            XFree(buffer2);
+                            XCopyArea(dis, pm, win, gc, 0, 0, screenwidth, HEIGHT, 0, 0);
+                            XSync(dis, False); 
+                        }
+                        break;
+                }
+            }
         }
     }
 
