@@ -14,7 +14,6 @@ static void X_cleanup();
 static void render_left_colors(int, int);
 static void render_right_colors(int);
 static void update_output_left();
-static void draw_wrk();
  
 static Display *dis;
 static Window win;
@@ -39,7 +38,6 @@ static long
     infobg,
     wrkbg,
     wrkfg,
-    focbg,
     emptybg,
     fontcol;
 
@@ -56,21 +54,21 @@ X_init() {
 	screenheight = DisplayHeight(dis, screen);
 
    	XColor c; 							
-	long *colvs[] = { &infobg, &wrkbg, &wrkfg, &focbg, &emptybg, &fontcol, NULL};
-	const char *colst[] = { INFOBG, WRKBG, WRKFG, FOCBG, EMPTYBG, FONTCOL, NULL};
+	long *colvs[] = { &infobg, &wrkbg, &wrkfg, &emptybg, &fontcol, NULL};
+	const char *colst[] = { INFOBG, WRKBG, WRKFG, EMPTYBG, FONTCOL, NULL};
 	cm = DefaultColormap(dis, screen);
-	for (i=0; i<6; i++) {
+	for (i=0; i<5; i++) {
 		XAllocNamedColor(dis, cm, colst[i], &c, &c);
 		*colvs[i] = c.pixel;
 	}
 
 	txtfont = XLoadFont(dis, FONT); 	
     txtfonti = XQueryFont(dis, txtfont);
-
+    
     if (LOC == 1) 							
-        y = screenheight - HEIGHT;
+        y = screenheight - HEIGHT - GAP;
     else
-        y = 0;
+        y = GAP;
 
 	XSetWindowAttributes winat = { 			
         .override_redirect = 1,
@@ -80,16 +78,7 @@ X_init() {
         .event_mask = PropertyChangeMask,
     };
 
-    win = XCreateWindow(dis, root, 0, y, screenwidth, HEIGHT, 1,
-        CopyFromParent,
-        InputOutput,
-        CopyFromParent,
-        CWOverrideRedirect |
-        CWColormap |
-        CWBackPixel |
-        CWEventMask, 
-        &winat
-    );
+    win = XCreateWindow(dis, root, PADDING, y, screenwidth-PADDING*2, HEIGHT, 1, CopyFromParent, InputOutput, CopyFromParent, CWOverrideRedirect|CWColormap|CWBackPixel|CWEventMask, &winat);
 
 	XSetWindowBorderWidth(dis, win, 0);
 
@@ -100,15 +89,9 @@ X_init() {
         .graphics_exposures = 0
     };
 
-    gc = XCreateGC(dis, root,
-        GCBackground |
-        GCForeground |
-        GCFont |
-        GCGraphicsExposures,
-        &gcv
-    );
+    gc = XCreateGC(dis, root, GCBackground|GCForeground|GCFont|GCGraphicsExposures, &gcv);
 
-	pm = XCreatePixmap(dis, root, screenwidth, HEIGHT, DefaultDepth(dis, screen));
+	pm = XCreatePixmap(dis, root, screenwidth-PADDING*2, HEIGHT, DefaultDepth(dis, screen));
 	XSetBackground(dis, gc, emptybg);
     XSetForeground(dis, gc, fontcol);
 	XMapWindow(dis, win);
@@ -164,13 +147,6 @@ render_left_colors(int modelen, int wrknum) {
     XSetForeground(dis, gc, fontcol);
     prev_wrk = wrkx;
 };
-
-void draw_wrk() {
-    XDrawString(dis, pm, gc, txtlen1, HEIGHT-HEIGHT/3, WRK1, strlen(WRK1));
-    XDrawString(dis, pm, gc, txtlen2, HEIGHT-HEIGHT/3, WRK2, strlen(WRK2));
-    XDrawString(dis, pm, gc, txtlen3, HEIGHT-HEIGHT/3, WRK3, strlen(WRK3));
-    XDrawString(dis, pm, gc, txtlen4, HEIGHT-HEIGHT/3, WRK4, strlen(WRK4));
-}
 
 void 
 render_right_colors(int buff_len) {
@@ -233,7 +209,11 @@ update_output_left() {
 
     render_left_colors(XTextWidth(txtfonti, mode, strlen(mode)), wsnum);
     XDrawString(dis, pm, gc, txtlen4 + XTextWidth(txtfonti, WRK4, strlen(WRK4)) + 6, HEIGHT-HEIGHT/3, mode, strlen(mode));
-    draw_wrk();
+
+    XDrawString(dis, pm, gc, txtlen1, HEIGHT-HEIGHT/3, WRK1, strlen(WRK1));
+    XDrawString(dis, pm, gc, txtlen2, HEIGHT-HEIGHT/3, WRK2, strlen(WRK2));
+    XDrawString(dis, pm, gc, txtlen3, HEIGHT-HEIGHT/3, WRK3, strlen(WRK3));
+    XDrawString(dis, pm, gc, txtlen4, HEIGHT-HEIGHT/3, WRK4, strlen(WRK4));
 
     memset(buffer, 0, 512);
     memset(mode, 0, 32); 
@@ -250,8 +230,6 @@ main(int argc, char *argv[]) {
             WRKBG = argv[i+1];
         if (strcmp(argv[i], "-wrkfg") == 0) 
             WRKFG = argv[i+1];
-        if (strcmp(argv[i], "-focbg") == 0) 
-            FOCBG = argv[i+1];
         if (strcmp(argv[i], "-emptybg") == 0) 
             EMPTYBG = argv[i+1];
         if (strcmp(argv[i], "-fontcol") == 0) 
@@ -270,18 +248,17 @@ main(int argc, char *argv[]) {
             SEPBEG = argv[i+1];
         if (strcmp(argv[i], "-mend") == 0)
             SEPEND = argv[i+1];
-        if (strcmp(argv[i], "-h") == 0) {
+        if ((strcmp(argv[i], "-h") == 0)||(strcmp(argv[i], "--help") == 0)) {
             printf("Usage: bar [OPTION]...\n"
                    "A simple status bar and pager.\n\n"
                    "  -infobg             background colour for text on the right hand side\n"
                    "  -wrkbg              background colour for the pager\n"
                    "  -wrkfg              foreground colour for the pager\n"
-                   "  -focbg              background colour for the focused window\n"
                    "  -emptybg            background colour for unused space\n"
                    "  -fontcol            colour of text\n"
                    "  -wrk[1-4]           names of the workspaces/virtual desktops\n"
                    "  -font\n"
-                   "  -h or --help\n");
+                   "  -h or --help\n\n");
             exit(1);
         }
     }
@@ -301,10 +278,7 @@ main(int argc, char *argv[]) {
 
     char *buffer2;
     int conec_num = ConnectionNumber(dis);
-    fd_set fds;
-    struct timeval timeout;
-    timeout.tv_sec = 1;
-    timeout.tv_usec = 2000000;   
+    fd_set fds; 
 
     while(1) {
         FD_ZERO(&fds);
@@ -323,10 +297,14 @@ main(int argc, char *argv[]) {
             while (XPending(dis) !=0) {
                 XNextEvent(dis, &ev);
                 switch(ev.type) {
+                    case Expose:
+                        XCopyArea(dis, pm, win, gc, 0, 0, screenwidth, HEIGHT, 0, 0);
+                        XSync(dis, False);
+                        break;
                     case PropertyNotify :
                         if (ev.xproperty.window == root && ev.xproperty.atom == XA_WM_NAME) {
                             XFetchName(dis, root, &buffer2);
-                            int buff_len = XTextWidth(txtfonti, buffer2, strlen(buffer2));
+                            int buff_len = XTextWidth(txtfonti, buffer2, strlen(buffer2)) + PADDING*2;
                             render_right_colors(buff_len);
                             XDrawString(dis, pm, gc, screenwidth - buff_len , HEIGHT - HEIGHT/3, buffer2, strlen(buffer2));
                             XFree(buffer2);
