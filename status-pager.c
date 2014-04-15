@@ -273,6 +273,7 @@ main(int argc, char *argv[]) {
 
     XEvent ev;
     XSelectInput(dis, root, PropertyChangeMask);
+    XSelectInput(dis, root, ExposureMask);
 
     char *buffer2;
     int conec_num = ConnectionNumber(dis);
