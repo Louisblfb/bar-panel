@@ -1,5 +1,9 @@
 
-1. use root window name for info and stdin for pager
-2. write translators for monsterwm and ewmh
-3. add windowed pager mode and info/dock mode
+1. write translators for monsterwm and ewmh
+
+2. add a simple menu/launcher or incorporate dmenu
+    
+    -implement simple typing with cursor in a window
+    -match it to a string (in Path, folder, etc)
+    -embed in bar
 

@@ -6,12 +6,12 @@
  *
  */
 
-#include "bar.h"
+#include "config.h"
 
 
 static void X_init();
 static void X_cleanup();
-static void render_left_colors(int, int);
+static void render_left_colors(int, int, int);
 static void render_right_colors(int);
 static void update_output_left();
  
@@ -109,7 +109,7 @@ void X_cleanup() {
 };
 
 void 
-render_left_colors(int modelen, int wrknum) {
+render_left_colors(int modelen, int wrknum, int numlen) {
 
     int wrkx, wrf, wrloc; 
     if (modelen == 0)
@@ -141,6 +141,11 @@ render_left_colors(int modelen, int wrknum) {
             wrf = XTextWidth(txtfonti, WRK4, strlen(WRK4)) + 6;
             wrloc = txtlen4 - 3;
             break;
+        default :
+            wrf = numlen + 6 ;
+            wrloc = txtlen4 + XTextWidth(txtfonti, WRK4, strlen(WRK4))+3  ;
+            break;
+            
     }
     XFillRectangle(dis, pm, gc, wrloc, 0, wrf, HEIGHT);
  
@@ -171,22 +176,12 @@ render_right_colors(int buff_len) {
 void 
 update_output_left() {
 
-    char buffer[512], mode[32];
-    int wsnum, wsm, endval, i;
+    char buffer[512], mode[32], numb[8];
+    int wsnum, wsm;
 
     fgets(buffer, 512, stdin);
-    for (i=0; i<512; i++) {
-        if (buffer[i] == 'd' && buffer[i-1] == '<') {
-            endval = i;
-            wsnum = buffer[i+1] - '0';
-            wsm = buffer[i+2] - '0';
-        }
-    }
-
-    for (endval=endval-1; endval<512-endval; endval++) {
-        buffer[endval] = '\0';
-    }
-
+    sscanf(buffer, "<d%d><m%d>", &wsnum, &wsm);
+       
     switch(wsm) {
         case 0 :
             sprintf(mode, "%ss-tile%s", SEPBEG, SEPEND);
@@ -206,15 +201,18 @@ update_output_left() {
         default :
             strcpy(mode, "");
     }
+    sprintf(numb, "%s%d%s", SEPBEG, wsnum + 1, SEPEND);
 
-    render_left_colors(XTextWidth(txtfonti, mode, strlen(mode)), wsnum);
-    XDrawString(dis, pm, gc, txtlen4 + XTextWidth(txtfonti, WRK4, strlen(WRK4)) + 6, HEIGHT-HEIGHT/3, mode, strlen(mode));
+    render_left_colors(XTextWidth(txtfonti, mode, strlen(mode)) + XTextWidth(txtfonti,numb,strlen(numb)) + 6, wsnum, XTextWidth(txtfonti, numb, strlen(numb)));
+    XDrawString(dis, pm, gc, txtlen4 + XTextWidth(txtfonti, WRK4, strlen(WRK4)) + XTextWidth(txtfonti, numb, strlen(numb))+12,  HEIGHT-HEIGHT/3, mode, strlen(mode));
 
     XDrawString(dis, pm, gc, txtlen1, HEIGHT-HEIGHT/3, WRK1, strlen(WRK1));
     XDrawString(dis, pm, gc, txtlen2, HEIGHT-HEIGHT/3, WRK2, strlen(WRK2));
     XDrawString(dis, pm, gc, txtlen3, HEIGHT-HEIGHT/3, WRK3, strlen(WRK3));
     XDrawString(dis, pm, gc, txtlen4, HEIGHT-HEIGHT/3, WRK4, strlen(WRK4));
+    XDrawString(dis, pm, gc, txtlen4 + XTextWidth(txtfonti, WRK4, strlen(WRK4)) +6 , HEIGHT-HEIGHT/3, numb, strlen(numb));
 
+    memset(numb, 0, 8);
     memset(buffer, 0, 512);
     memset(mode, 0, 32); 
 };

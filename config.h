@@ -16,7 +16,7 @@
 
 static int 
     HEIGHT    =   14,
-    LOC       =   1,    // LOC defines the location of the bar (0-top, 1-bottom)
+    LOC       =   0,    // LOC defines the location of the bar (0-top, 1-bottom)
     PADDING   =   24,
     GAP       =   6;
    
@@ -27,7 +27,7 @@ static char
     *WRK4     =    " 4 ",
     *FONT     =    "-benis-lemon-medium-r-normal--10-110-75-75-m-50-iso8859-1",
     *SEPBEG   =    "[",
-    *SEPEND   =    "] ",
+    *SEPEND   =    "]",
 
     *INFOBG   =    "#333333",
     *WRKBG    =    "#333333",
