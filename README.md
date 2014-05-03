@@ -2,7 +2,7 @@
 BAR
 ===
 
-Bar is a simple status bar and pager. Bar currently works with WMs that support EWMH. It also works with Monsterwm. 
+Bar is a simple status bar and pager. It is a work in progress so expect nothing. 
 
 FEATURES
 ========
